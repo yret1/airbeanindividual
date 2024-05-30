@@ -1,11 +1,11 @@
 const express = require('express');
-
+const connectMongoDB = require("./config/database")
 
 const app = express();
 
 
-// Databas
 
+connectMongoDB();
 
 //Middleware
 
