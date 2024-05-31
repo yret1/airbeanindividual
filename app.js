@@ -1,19 +1,12 @@
-const express = require('express');
-const connectMongoDB = require("./config/database")
+const express = require("express");
+const connectToMongoDB = require("./config/database");
+
+const routes = require("./routes/routes");
 
 const app = express();
 
+connectToMongoDB();
 
-
-connectMongoDB();
-
-//Middleware
-
-
-//routes
-
+app.use("/", routes);
 
 module.exports = app;
-
-
-

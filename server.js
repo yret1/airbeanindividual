@@ -1,8 +1,10 @@
+const cors = require("cors");
 const app = require("./app");
 
-const PORT  = 8080;
+const port = process.env.PORT || 8000;
 
+app.use(cors());
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${process.env.MONGODB_URL}`);
-})
+app.listen(port, () => {
+  console.log(`Example app listening at http://localhost:${port}`);
+});
