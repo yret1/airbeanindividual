@@ -1,4 +1,5 @@
 const { MongoClient, ServerApiVersion } = require("mongodb");
+
 const uri =
   "mongodb+srv://grupp7:grupp7swe@airbean.slpvtll.mongodb.net/?retryWrites=true&w=majority&appName=airbean";
 
@@ -11,20 +12,17 @@ const client = new MongoClient(uri, {
   },
 });
 
-async function connectToMongoDB() {
+const connectToMongoDB = async () => {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
+    // Connect the client to the server (optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
-    return client;
-  } finally {
-    // Ensures that the client will close when you finish/error
-    await client.close();
+    await client.db("Airbean").command({ ping: 1 });
+    console.log("Connected successfully to MongoDB");
+  } catch (error) {
+    console.error("Error connecting to MongoDB", error);
+    process.exit(1); // Exit process with failure
   }
-}
+};
 
-module.exports = connectToMongoDB;
+module.exports = { connectToMongoDB, client };
