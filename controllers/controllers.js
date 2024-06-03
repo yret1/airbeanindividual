@@ -2,15 +2,9 @@ const { client } = require("../config/database");
 
 const crypto = require("node:crypto");
 
-let userID = null;
-
 exports.createOrder = async (req, res) => {
-  if (userID !== null && userID !== undefined) {
-    res.status(200).json("Log in to place orders");
-    return;
-  }
-
   const data = await req.body;
+
   try {
     const database = client.db("Airbean");
     const menu = database.collection("Menu");
@@ -18,19 +12,35 @@ exports.createOrder = async (req, res) => {
 
     const order = data.order;
 
-    const userId = data.order;
+    const userId = req.session.userID;
 
-    for (item in order) {
-      console.log(item);
-    }
+    const itemsInCart = [];
 
-    const Confirm = "Tack för din beställning! Kaffe och kaka på väg";
+    const keys = Object.keys(order);
+
+    keys.forEach((key) => {
+      const item = orders.findOne({ id: key });
+      const quantity = order[key];
+      item.quantity = quantity;
+
+      itemsInCart.push(item);
+    });
+
+    const newOrderInsert = orders.insertOne({
+      ordernumber: userId,
+      placed_at: new Date(),
+      coffeOrdered: itemsInCart,
+    });
+
+    const Confirm = "Tack för din beställning! Ditt orderId = kaka";
 
     res.status(200).json({ message: Confirm });
   } catch (error) {
     res.status(500).json({ message: "Error order failed " + error });
   }
 };
+
+exports.getPreviousOrders = async (req, res) => {};
 
 exports.getMenu = async (req, res) => {
   try {
@@ -70,7 +80,7 @@ exports.logIn = async (req, res) => {
 
     if (findUser.username) {
       if (shiftedPass === findUser.password) {
-        userID = findUser.username;
+        req.session.userID = findUser.username;
 
         res.status(200).json("Logged in!");
       } else {
@@ -117,7 +127,7 @@ exports.signUp = async (req, res) => {
         email: email,
       });
 
-      userID = shiftedUser;
+      req.session.userID = shiftedUser;
       res.status(200).json(`Welcome to airbean ${details.username}!`);
     }
   } catch (error) {
