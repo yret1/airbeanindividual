@@ -49,7 +49,12 @@ exports.createOrder = async (req, res) => {
       billed: `${billed} SEK`,
     });
 
-    const confirmMessage = `Tack för din beställning! Ditt orderId = ${orderID}`;
+    let confirmMessage;
+    if (req.session.userID !== "guest") {
+      confirmMessage = `Tack för din beställning! Ditt orderId = ${orderID}`;
+    } else {
+      confirmMessage = "Tack för din beställning. Lyfter snart!";
+    }
 
     res.status(200).json({ message: confirmMessage });
   } catch (error) {
@@ -62,7 +67,18 @@ exports.addToCart = async (req, res) => {};
 exports.removeFromCart = async (req, res) => {};
 
 exports.viewCart = async (req, res) => {};
+
 exports.getPreviousOrders = async (req, res) => {};
+
+exports.continueAsGuest = async (req, res) => {
+  req.session.userID = "guest";
+
+  res
+    .status(200)
+    .json(
+      "Please note that you will not be able to review order history or change orders whilst you are logged in as guest"
+    );
+};
 
 exports.getMenu = async (req, res) => {
   try {
