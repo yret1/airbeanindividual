@@ -13,61 +13,98 @@ const generateRandomString = (length) => {
 };
 
 exports.createOrder = async (req, res) => {
-  const data = req.body;
+  if (!req.session.cart) {
+    res.status(404).json("Cart is empty!");
+    return;
+  } else {
+    try {
+      const database = client.db("Airbean");
+      const orders = database.collection("Orders");
 
-  try {
-    const database = client.db("Airbean");
-    const menu = database.collection("Menu");
-    const orders = database.collection("Orders");
+      const userId = req.session.userID;
+      const itemsInCart = req.session.cart;
+      let billed = 0;
 
-    const order = data.order;
-    const userId = req.session.userID;
-    const itemsInCart = [];
-    let billed = 0;
+      itemsInCart.forEach((item) => {
+        const price = item.price;
 
-    await Promise.all(
-      order.map(async (item) => {
-        const product = await menu.findOne({ id: item.id });
+        const quantity = item.quantity;
 
-        if (product) {
-          product.quantity = item.quantity;
+        const cost = price * quantity;
 
-          const price = item.quantity * product.price;
-          billed += price;
-          itemsInCart.push(product);
-        }
-      })
-    );
+        billed += cost;
+      });
 
-    const randomString = generateRandomString(8);
-    const orderID = `${userId}${randomString}`;
+      const randomString = generateRandomString(8);
+      const orderID = `${userId}${randomString}`;
 
-    await orders.insertOne({
-      ordernumber: orderID,
-      placed_at: new Date().toDateString(),
-      coffeeOrdered: itemsInCart,
-      billed: `${billed} SEK`,
-    });
+      await orders.insertOne({
+        ordernumber: orderID,
+        placed_at: new Date().toDateString(),
+        coffeeOrdered: itemsInCart,
+        billed: `${billed} SEK`,
+      });
 
-    let confirmMessage;
-    if (req.session.userID !== "guest") {
-      confirmMessage = `Tack för din beställning! Ditt orderId = ${orderID}`;
-    } else {
-      confirmMessage = "Tack för din beställning. Lyfter snart!";
+      let confirmMessage;
+      if (req.session.userID !== "guest") {
+        confirmMessage = `Tack för din beställning! Ditt orderId = ${orderID}`;
+        req.session.cart = [];
+      } else {
+        confirmMessage = "Tack för din beställning. Lyfter snart!";
+        req.session.cart = [];
+      }
+
+      res.status(200).json({ message: confirmMessage });
+    } catch (error) {
+      res.status(500).json({ message: "Error order failed: " + error.message });
     }
-
-    res.status(200).json({ message: confirmMessage });
-  } catch (error) {
-    res.status(500).json({ message: "Error order failed: " + error.message });
   }
 };
 
-exports.addToCart = async (req, res) => {};
+exports.addToCart = async (req, res) => {
+  const addItem = req.body.add;
+  if (!req.session.cart) {
+    req.session.cart = [];
+  }
+  const cart = req.session.cart;
+
+  const database = client.db("Airbean");
+  const menu = database.collection("Menu");
+
+  let itemfound = false;
+
+  cart.forEach((item) => {
+    if (item.id === addItem.id) {
+      itemfound = true;
+      item.quantity += addItem.quantity;
+
+      res.status(200).json({
+        message: `${addItem.quantity} ${item.title} added to cart`,
+        cart: req.session.cart,
+      });
+    }
+  });
+  if (!itemfound) {
+    const product = await menu.findOne({ id: addItem.id });
+
+    if (product && !itemfound) {
+      product.quantity = addItem.quantity;
+
+      cart.push(product);
+
+      res.status(200).json({
+        message: `${product.quantity} ${product.title} added to cart`,
+        cart: req.session.cart,
+      });
+    }
+  }
+};
 
 exports.removeFromCart = async (req, res) => {};
 
 exports.viewCart = async (req, res) => {
   if (req.session.cart) {
+    res.status(200).json(req.session.cart);
   } else {
     res.status(400).json("Cart empty!");
   }

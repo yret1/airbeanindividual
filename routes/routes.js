@@ -11,10 +11,11 @@ router.get("/", controllers.landing);
 router.post("/login", controllers.logIn);
 router.post("/signup", controllers.signUp);
 router.get("/guest", controllers.continueAsGuest);
-
+router.get("/viewcart", authenticateUser, controllers.viewCart);
+router.post("/addtocart", authenticateUser, handleOrder, controllers.addToCart);
 router.get("/menu", authenticateUser, controllers.getMenu);
 
-router.post("/create", authenticateUser, handleOrder, controllers.createOrder);
+router.get("/create", authenticateUser, controllers.createOrder);
 router.get(
   "/orderhistory",
   authenticateUser,
