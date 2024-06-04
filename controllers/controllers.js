@@ -100,7 +100,22 @@ exports.addToCart = async (req, res) => {
   }
 };
 
-exports.removeFromCart = async (req, res) => {};
+exports.removeFromCart = async (req, res) => {
+  if (req.session.cart && req.session.cart.length > 0) {
+    const removeItem = req.body.remove;
+    const filterCart = req.session.cart.filter(
+      (item) => item.id !== removeItem.id
+    );
+
+    req.session.cart = filterCart;
+    res.status(200).json({
+      message: "Item deleted",
+      cart: req.session.cart,
+    });
+  } else {
+    res.status(400).json("Cart empty!");
+  }
+};
 
 exports.viewCart = async (req, res) => {
   if (req.session.cart) {
@@ -240,11 +255,10 @@ exports.signUp = async (req, res) => {
   }
 };
 
-exports.landing = async (req, res) => {
-  res.status(200);
-  res.setHeader("Content-Type", "text/html");
-  res.write(
-    "<!DOCTYPE html><html><head><title>Landing Page</title></head><body><h1>To order, send your details to /login or /signup. The console will show the way!</h1></body></html>"
-  );
-  res.end();
+exports.about = async (req, res) => {
+  res
+    .status(200)
+    .json(
+      "Welcome to Airbean! We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum!  We are lorem ipsum! Här fortsätter lorem * 20"
+    );
 };
