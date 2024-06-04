@@ -25,26 +25,19 @@ exports.createOrder = async (req, res) => {
     const itemsInCart = [];
     let billed = 0;
 
-    const keys = Object.keys(order);
+    await Promise.all(
+      order.map(async (item) => {
+        const product = await menu.findOne({ id: item.id });
 
-    for (const key of keys) {
-      const id = Number(key);
-      const quantity = Number(order[key]);
+        if (product) {
+          product.quantity = item.quantity;
 
-      const item = await menu.findOne({ id: id });
-
-      if (!item) {
-        return res.status(404).json({
-          message: `Item with id ${id} not found in menu.`,
-        });
-      }
-
-      item.quantity = quantity;
-      const totalPrice = item.price * item.quantity;
-      billed += totalPrice;
-
-      itemsInCart.push(item);
-    }
+          const price = item.quantity * product.price;
+          billed += price;
+          itemsInCart.push(product);
+        }
+      })
+    );
 
     const randomString = generateRandomString(8);
     const orderID = `${userId}${randomString}`;
