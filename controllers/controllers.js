@@ -2,8 +2,18 @@ const { client } = require("../config/database");
 
 const crypto = require("node:crypto");
 
+const generateRandomString = (length) => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
+
 exports.createOrder = async (req, res) => {
-  const data = await req.body;
+  const data = req.body;
 
   try {
     const database = client.db("Airbean");
@@ -11,32 +21,46 @@ exports.createOrder = async (req, res) => {
     const orders = database.collection("Orders");
 
     const order = data.order;
-
     const userId = req.session.userID;
-
     const itemsInCart = [];
+    let billed = 0;
 
     const keys = Object.keys(order);
 
-    keys.forEach((key) => {
-      const item = orders.findOne({ id: key });
-      const quantity = order[key];
+    for (const key of keys) {
+      const id = Number(key);
+      const quantity = Number(order[key]);
+
+      const item = await menu.findOne({ id: id });
+
+      if (!item) {
+        return res.status(404).json({
+          message: `Item with id ${id} not found in menu.`,
+        });
+      }
+
       item.quantity = quantity;
+      const totalPrice = item.price * item.quantity;
+      billed += totalPrice;
 
       itemsInCart.push(item);
+    }
+
+    const randomString = generateRandomString(8);
+    const orderID = `${userId}${randomString}`;
+
+    await orders.insertOne({
+      ordernumber: orderID,
+      placed_at: new Date().toDateString(),
+      coffeeOrdered: itemsInCart,
+      billed: `${billed} SEK`,
     });
 
-    const newOrderInsert = orders.insertOne({
-      ordernumber: userId,
-      placed_at: new Date(),
-      coffeOrdered: itemsInCart,
-    });
+    const confirmMessage = `Tack för din beställning! Ditt orderId = ${orderID}`;
 
-    const Confirm = "Tack för din beställning! Ditt orderId = kaka";
-
-    res.status(200).json({ message: Confirm });
+    res.status(200).json({ message: confirmMessage });
   } catch (error) {
-    res.status(500).json({ message: "Error order failed " + error });
+    res.status(500).json({ message: "Error order failed: " + error.message });
   }
 };
 
