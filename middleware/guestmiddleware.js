@@ -7,3 +7,5 @@ const blockGuest = (req, res, next) => {
     next();
   }
 };
+
+module.exports = blockGuest;

@@ -68,7 +68,25 @@ exports.removeFromCart = async (req, res) => {};
 
 exports.viewCart = async (req, res) => {};
 
-exports.getPreviousOrders = async (req, res) => {};
+exports.getPreviousOrders = async (req, res) => {
+  try {
+    const database = client.db("Airbean");
+    const orders = database.collection("Orders");
+    const userId = req.session.userID;
+    const userOrder = await orders
+      .find({
+        ordernumber: { $regex: `^${userId}` },
+      })
+      .toArray();
+    if (userOrder && userOrder.length > 0) {
+      res.status(200).json(userOrder);
+    } else {
+      res.status(404).json({ message: "No orders found for this user" });
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error order failed: " + error.message });
+  }
+};
 
 exports.continueAsGuest = async (req, res) => {
   req.session.userID = "guest";
