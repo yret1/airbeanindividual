@@ -66,7 +66,12 @@ exports.addToCart = async (req, res) => {};
 
 exports.removeFromCart = async (req, res) => {};
 
-exports.viewCart = async (req, res) => {};
+exports.viewCart = async (req, res) => {
+  if (req.session.cart) {
+  } else {
+    res.status(400).json("Cart empty!");
+  }
+};
 
 exports.getPreviousOrders = async (req, res) => {
   try {
@@ -143,7 +148,7 @@ exports.logIn = async (req, res) => {
         res.status(200).json("Wrong password");
       }
     } else {
-      res.status(200).json("No user found, please create an account!");
+      res.status(404).json("No user found, please create an account!");
     }
   } catch (error) {
     res.status(500).json({ error: error });
