@@ -66,7 +66,12 @@ exports.addToCart = async (req, res) => {};
 
 exports.removeFromCart = async (req, res) => {};
 
-exports.viewCart = async (req, res) => {};
+exports.viewCart = async (req, res) => {
+  if (req.session.cart) {
+  } else {
+    res.status(400).json("Cart empty!");
+  }
+};
 
 exports.getPreviousOrders = async (req, res) => {};
 
