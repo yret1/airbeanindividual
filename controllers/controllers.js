@@ -2,35 +2,69 @@ const { client } = require("../config/database");
 
 const crypto = require("node:crypto");
 
-let userID = null;
+const generateRandomString = (length) => {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
 
 exports.createOrder = async (req, res) => {
-  if (userID !== null && userID !== undefined) {
-    res.status(200).json("Log in to place orders");
-    return;
-  }
+  const data = req.body;
 
-  const data = await req.body;
   try {
     const database = client.db("Airbean");
     const menu = database.collection("Menu");
     const orders = database.collection("Orders");
 
     const order = data.order;
+    const userId = req.session.userID;
+    const itemsInCart = [];
+    let billed = 0;
 
-    const userId = data.order;
+    const keys = Object.keys(order);
 
-    for (item in order) {
-      console.log(item);
+    for (const key of keys) {
+      const id = Number(key);
+      const quantity = Number(order[key]);
+
+      const item = await menu.findOne({ id: id });
+
+      if (!item) {
+        return res.status(404).json({
+          message: `Item with id ${id} not found in menu.`,
+        });
+      }
+
+      item.quantity = quantity;
+      const totalPrice = item.price * item.quantity;
+      billed += totalPrice;
+
+      itemsInCart.push(item);
     }
 
-    const Confirm = "Tack för din beställning! Kaffe och kaka på väg";
+    const randomString = generateRandomString(8);
+    const orderID = `${userId}${randomString}`;
 
-    res.status(200).json({ message: Confirm });
+    await orders.insertOne({
+      ordernumber: orderID,
+      placed_at: new Date().toDateString(),
+      coffeeOrdered: itemsInCart,
+      billed: `${billed} SEK`,
+    });
+
+    const confirmMessage = `Tack för din beställning! Ditt orderId = ${orderID}`;
+
+    res.status(200).json({ message: confirmMessage });
   } catch (error) {
-    res.status(500).json({ message: "Error order failed " + error });
+    res.status(500).json({ message: "Error order failed: " + error.message });
   }
 };
+
+exports.getPreviousOrders = async (req, res) => {};
 
 exports.getMenu = async (req, res) => {
   try {
@@ -70,7 +104,7 @@ exports.logIn = async (req, res) => {
 
     if (findUser.username) {
       if (shiftedPass === findUser.password) {
-        userID = findUser.username;
+        req.session.userID = findUser.username;
 
         res.status(200).json("Logged in!");
       } else {
@@ -117,7 +151,7 @@ exports.signUp = async (req, res) => {
         email: email,
       });
 
-      userID = shiftedUser;
+      req.session.userID = shiftedUser;
       res.status(200).json(`Welcome to airbean ${details.username}!`);
     }
   } catch (error) {
