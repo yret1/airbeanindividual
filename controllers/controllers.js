@@ -139,7 +139,7 @@ exports.signUp = async (req, res) => {
 
     const database = client.db("Airbean");
     const userbase = database.collection("Users");
-
+    const emailFormat = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+.[A-Za-z]{2,}/;
     const findUser = await userbase.findOne({ username: shiftedUser });
 
     if (!shiftedUser || !shiftedPass || !email) {
@@ -148,14 +148,17 @@ exports.signUp = async (req, res) => {
       if (findUser) {
         res.status(200).json("User already exists. Please log in!");
       } else {
-        const createUser = await userbase.insertOne({
-          username: shiftedUser,
-          password: shiftedPass,
-          email: email,
-        });
-
-        req.session.userID = shiftedUser;
-        res.status(200).json(`Welcome to airbean ${details.username}!`);
+        if (emailFormat.test(email) == true) {
+          const createUser = await userbase.insertOne({
+            username: shiftedUser,
+            password: shiftedPass,
+            email: email,
+          });
+          req.session.userID = shiftedUser;
+          res.status(200).json(`Welcome to Airbean ${details.username}!`);
+        } else {
+          res.status(401).json("Please register with a valid mailadress");
+        }
       }
     }
   } catch (error) {
