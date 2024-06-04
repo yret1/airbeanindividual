@@ -130,7 +130,7 @@ exports.logIn = async (req, res) => {
         res.status(200).json("Wrong password");
       }
     } else {
-      res.status(200).json("No user found, please create an account!");
+      res.status(404).json("No user found, please create an account!");
     }
   } catch (error) {
     res.status(500).json({ error: error });
