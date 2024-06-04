@@ -142,17 +142,21 @@ exports.signUp = async (req, res) => {
 
     const findUser = await userbase.findOne({ username: shiftedUser });
 
-    if (findUser) {
-      res.status(200).json("User already exists. Please log in!");
+    if (!shiftedUser || !shiftedPass || !email) {
+      res.status(401).json("Please enter a username, password & email");
     } else {
-      const createUser = await userbase.insertOne({
-        username: shiftedUser,
-        password: shiftedPass,
-        email: email,
-      });
+      if (findUser) {
+        res.status(200).json("User already exists. Please log in!");
+      } else {
+        const createUser = await userbase.insertOne({
+          username: shiftedUser,
+          password: shiftedPass,
+          email: email,
+        });
 
-      req.session.userID = shiftedUser;
-      res.status(200).json(`Welcome to airbean ${details.username}!`);
+        req.session.userID = shiftedUser;
+        res.status(200).json(`Welcome to airbean ${details.username}!`);
+      }
     }
   } catch (error) {
     res.status(500).json({ error: error });
