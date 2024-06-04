@@ -139,7 +139,7 @@ exports.logIn = async (req, res) => {
 
     const findUser = await userbase.findOne({ username: shiftedUser });
 
-    if (findUser.username) {
+    if (findUser) {
       if (shiftedPass === findUser.password) {
         req.session.userID = findUser.username;
 
