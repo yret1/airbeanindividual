@@ -57,6 +57,11 @@ exports.createOrder = async (req, res) => {
   }
 };
 
+exports.addToCart = async (req, res) => {};
+
+exports.removeFromCart = async (req, res) => {};
+
+exports.viewCart = async (req, res) => {};
 exports.getPreviousOrders = async (req, res) => {};
 
 exports.getMenu = async (req, res) => {
