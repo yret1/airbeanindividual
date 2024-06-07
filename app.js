@@ -1,5 +1,7 @@
 const express = require("express");
 const session = require("express-session");
+const dotenv = require("dotenv");
+dotenv.config();
 const { connectToMongoDB } = require("./config/database");
 
 const routes = require("./routes/routes");

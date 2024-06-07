@@ -12,6 +12,122 @@ const generateRandomString = (length) => {
   return result;
 };
 
+//Admin functions
+
+exports.addMenuItem = async (req, res) => {
+  const item = req.body.newItem;
+  const database = client.db("Airbean");
+  const menu = database.collection("Menu");
+
+  const findItem = await menu.findOne({ id: item.id });
+  const findItemTitle = await menu.findOne({ title: item.title });
+
+  if (findItem) {
+    res.status(400).json("Item already exists, please update instead");
+  } else if (findItemTitle) {
+    res
+      .status(400)
+      .json(
+        `Item title already exists, please enter new title or update the existing product with id ${findItemTitle.id}`
+      );
+  } else if (
+    !item.title ||
+    !item.price ||
+    !item.description ||
+    !item.id ||
+    item.price <= 0
+  ) {
+    res.status(400).json("Please enter all fields for the new item!");
+  } else {
+    const newProduct = {
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      price: item.price,
+      created_at: new Date().toDateString(),
+      modified_at: "New item",
+    };
+
+    await menu.insertOne(newProduct);
+    res.status(200).json("Item added to menu!");
+  }
+};
+
+exports.updateMenuItem = async (req, res) => {
+  const item = req.body.updateItem;
+  const database = client.db("Airbean");
+  const menu = database.collection("Menu");
+
+  const findItem = await menu.findOne({ id: item.id });
+
+  if (findItem) {
+    const updatedProduct = {
+      id: item.id || findItem.id,
+      title: item.title || findItem.title,
+      description: item.description || findItem.description,
+      price: item.price || findItem.price,
+      created_at: findItem.created_at,
+      modified_at: new Date().toDateString(),
+    };
+
+    await menu.updateOne({ id: item.id }, { $set: updatedProduct });
+    res.status(200).json("Item updated!");
+  } else {
+    res
+      .status(404)
+      .json("Item not found, please add the item to the menu first!");
+  }
+};
+
+exports.deleteMenuItem = async (req, res) => {
+  const item = req.body.deleteItem;
+  const database = client.db("Airbean");
+  const menu = database.collection("Menu");
+
+  const findItem = await menu.findOne({ id: item.id });
+
+  if (findItem) {
+    await menu.deleteOne({ id: item.id });
+    res.status(200).json("Item deleted!");
+  } else {
+    res.status(404).json("Item not found, please enter a valid item id!");
+  }
+};
+
+exports.createDiscount = async (req, res) => {
+  const discount = req.body.discount;
+  const code = discount.code || "New discount";
+  const database = client.db("Airbean");
+  const discounts = database.collection("Discounts");
+  const menu = database.collection("Menu");
+
+  const findDiscount = await discounts.findOne({ title: code });
+  const itemOne = discount.itemOne;
+  const itemTwo = discount.itemTwo;
+
+  const find = await menu.findOne({ id: itemOne });
+  const findTwo = await menu.findOne({ id: itemTwo });
+
+  if (!find || !findTwo) {
+    res.status(404).json("Please enter valid item ids for the discount!");
+  } else if (findDiscount) {
+    res.status(400).json("This combo already exists, please update instead");
+  } else if (!discount.code || !discount.discount || discount.discount <= 0) {
+    res.status(400).json("Please enter all fields for the new discount!");
+  } else {
+    const newDiscount = {
+      code: find.title + findTwo.title,
+      discount: discount.discount,
+      created_at: new Date().toDateString(),
+    };
+
+    await discounts.insertOne(newDiscount);
+    res.status(200).json("Discount added!");
+  }
+};
+
+//User functions
+
 exports.createOrder = async (req, res) => {
   if (!req.session.cart) {
     res.status(404).json("Cart is empty!");
@@ -242,6 +358,7 @@ exports.signUp = async (req, res) => {
             username: shiftedUser,
             password: shiftedPass,
             email: email,
+            role: "user",
           });
           req.session.userID = shiftedUser;
           res.status(200).json(`Welcome to Airbean ${details.username}!`);

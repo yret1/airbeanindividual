@@ -1,13 +1,36 @@
 const app = require("express");
 const router = app.Router();
 const authenticateUser = require("../middleware/auth");
+const adminCheck = require("../middleware/adminprotector");
 const handleOrder = require("../middleware/orderHandler");
 const guestmw = require("../middleware/guestmiddleware");
 const controllers = require("../controllers/controllers");
 const blockGuest = require("../middleware/guestmiddleware");
 
-router.get("/about", controllers.about);
+// Admin functions
 
+router.post(
+  "/addmenuitem",
+  authenticateUser,
+  adminCheck,
+  controllers.addMenuItem
+);
+router.post(
+  "/updatemenuitem",
+  authenticateUser,
+  adminCheck,
+  controllers.updateMenuItem
+);
+
+router.post(
+  "/deletemenuitem",
+  authenticateUser,
+  adminCheck,
+  controllers.deleteMenuItem
+);
+// User functions
+
+router.get("/about", controllers.about);
 router.post("/login", controllers.logIn);
 router.post("/signup", controllers.signUp);
 router.get("/guest", controllers.continueAsGuest);
