@@ -61,7 +61,6 @@ exports.addMenuItem = async (req, res) => {
       description: item.description,
       price: item.price,
       created_at: new Date().toDateString(),
-      modified_at: "New item",
     };
 
     await menu.insertOne(newProduct);
@@ -179,6 +178,7 @@ exports.createOrder = async (req, res) => {
     try {
       const database = client.db("Airbean");
       const orders = database.collection("Orders");
+      const discounts = database.collection("Discounts");
 
       const userId = req.session.userID;
       const itemsInCart = req.session.cart;
@@ -194,6 +194,16 @@ exports.createOrder = async (req, res) => {
         billed += cost;
       });
 
+      if (req.session.discount) {
+        const discount = await discounts.findOne({
+          code: req.session.discount,
+        });
+        if (discount) {
+          const percentage = parseFloat(discount.discount.replace("%", ""));
+          billed = billed - (billed * percentage) / 100;
+        }
+      }
+
       const randomString = generateRandomString(8);
       const orderID = `${userId}${randomString}`;
 
@@ -201,6 +211,7 @@ exports.createOrder = async (req, res) => {
         ordernumber: orderID,
         placed_at: new Date().toDateString(),
         coffeeOrdered: itemsInCart,
+        discount: req.session.discount || "No discount applied",
         billed: `${billed} SEK`,
       });
 
@@ -277,8 +288,24 @@ exports.removeFromCart = async (req, res) => {
 };
 
 exports.viewCart = async (req, res) => {
+  const database = client.db("Airbean");
+  const discounts = database.collection("Discounts");
+
   if (req.session.cart) {
-    res.status(200).json(req.session.cart);
+    const cart = req.session.cart;
+    const total = 0;
+    cart.forEach((item) => {
+      total += item.price * item.quantity;
+    });
+
+    const discount = await discounts.findOne({ code: req.session.discount });
+
+    if (discount) {
+      const percentage = parseFloat(discount.discount.replace("%", ""));
+
+      total = total - (total * percentage) / 100;
+    }
+    res.status(200).json({ cart: cart, total: total + " SEK" });
   } else {
     res.status(400).json("Cart empty!");
   }
