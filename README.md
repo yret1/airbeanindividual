@@ -13,7 +13,7 @@ When a new account is created the default role is set to "user". This can only b
 To add a new product send a POST to **/addmenuitem**
 
 the format for the request should look like this
-
+```
 {
     "newItem" : {
         "id": Your new products id (Number not already in db),
@@ -22,7 +22,7 @@ the format for the request should look like this
         "price": A number (converted to SEK),
     }
 }
-
+```
 All of the fields are required.
 
 Whenever the item is added it gets a created date in the database of when the request was made.
@@ -35,7 +35,7 @@ Whenever the item is added it gets a created date in the database of when the re
 To modify a product send a POST to **/updatemenuitem**
 
 the format for the request should look like this
-
+```
 {
 	"updateItem":{
 		"id": 7 (required),
@@ -43,7 +43,7 @@ the format for the request should look like this
 		"title":"Häftig kaffe va?"
 	}
 }
-
+```
 The id cannot be modified and is required when updating a product.
 
 The rest of the fields are optional, only the modified fields will be updated
@@ -57,7 +57,7 @@ Whenever the item is update it gets a updated date in the database of when the r
 To modify a product send a POST to **/updatemenuitem**
 
 the format for the request should look like this
-
+```
 {
 	"updateItem":{
 		"id": 7 (required),
@@ -65,6 +65,7 @@ the format for the request should look like this
 		"title":"Häftig kaffe va?"
 	}
 }
+```
 
 The id cannot be modified and is required when updating a product.
 
