@@ -1,4 +1,4 @@
-# Welcome to Airbeans API
+# Welcome to the Airbean API
 
 
 ## Admin Endpoints
@@ -54,31 +54,20 @@ Whenever the item is update it gets a updated date in the database of when the r
 ### Remove product
 
 
-To modify a product send a POST to **/updatemenuitem**
+To delete a product send a POST to **/removemenuitem**
 
 the format for the request should look like this
 ```
 {
-	"updateItem":{
+	"deleteItem":{
 		"id": 7 (required),
-		"description": "Kaffa galloj",
-		"title":"Häftig kaffe va?"
 	}
 }
 ```
 
-The id cannot be modified and is required when updating a product.
+This function only takes the id of the item to be deleted.
 
-The rest of the fields are optional, only the modified fields will be updated
-
-Whenever the item is update it gets a updated date in the database of when the request was made.
-
-
-
-
-
-
-
+If the item is found in the database it will be removed
 
 
 ## User Endpoints
