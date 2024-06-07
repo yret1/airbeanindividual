@@ -291,21 +291,25 @@ exports.viewCart = async (req, res) => {
   const database = client.db("Airbean");
   const discounts = database.collection("Discounts");
 
-  if (req.session.cart) {
+  if (req.session.cart && req.session.cart.length > 0) {
     const cart = req.session.cart;
-    const total = 0;
+    let total = 0;
+
     cart.forEach((item) => {
       total += item.price * item.quantity;
     });
 
-    const discount = await discounts.findOne({ code: req.session.discount });
+    if (req.session.discount) {
+      const discount = await discounts.findOne({ code: req.session.discount });
 
-    if (discount) {
-      const percentage = parseFloat(discount.discount.replace("%", ""));
+      if (discount) {
+        const percentage = parseFloat(discount.discount.replace("%", ""));
 
-      total = total - (total * percentage) / 100;
+        total = total - (total * percentage) / 100;
+      }
     }
-    res.status(200).json({ cart: cart, total: total + " SEK" });
+
+    res.status(200).json({ cart: cart, total: total.toFixed(2) + " SEK" });
   } else {
     res.status(400).json("Cart empty!");
   }

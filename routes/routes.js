@@ -57,7 +57,7 @@ router.post(
 );
 router.get("/menu", authenticateUser, controllers.getMenu);
 
-router.get("/create", authenticateUser, controllers.createOrder);
+router.get("/create", authenticateUser, discountCheck, controllers.createOrder);
 router.get(
   "/orderhistory",
   authenticateUser,
