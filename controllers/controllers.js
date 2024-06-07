@@ -22,6 +22,22 @@ exports.addMenuItem = async (req, res) => {
   const findItem = await menu.findOne({ id: item.id });
   const findItemTitle = await menu.findOne({ title: item.title });
 
+  for (const key in item) {
+    if (
+      item[key] !== "id" ||
+      item[key] !== "title" ||
+      item[key] !== "price" ||
+      item[key] !== "description"
+    ) {
+      res
+        .status(400)
+        .json(
+          "Please enter a valid item id, title, price and description, refrain from using other fields!"
+        );
+      return;
+    }
+  }
+
   if (findItem) {
     res.status(400).json("Item already exists, please update instead");
   } else if (findItemTitle) {
@@ -60,6 +76,22 @@ exports.updateMenuItem = async (req, res) => {
 
   const findItem = await menu.findOne({ id: item.id });
 
+  for (const key in item) {
+    if (
+      item[key] !== "id" ||
+      item[key] !== "title" ||
+      item[key] !== "price" ||
+      item[key] !== "description"
+    ) {
+      res
+        .status(400)
+        .json(
+          "Please enter a valid item id, title, price and description, refrain from using other fields!"
+        );
+      return;
+    }
+  }
+
   if (findItem) {
     const updatedProduct = {
       id: item.id || findItem.id,
@@ -96,33 +128,33 @@ exports.deleteMenuItem = async (req, res) => {
 
 exports.createDiscount = async (req, res) => {
   const discount = req.body.discount;
-  const code = discount.code || "New discount";
   const database = client.db("Airbean");
   const discounts = database.collection("Discounts");
   const menu = database.collection("Menu");
 
-  const findDiscount = await discounts.findOne({ title: code });
-  const itemOne = discount.itemOne;
-  const itemTwo = discount.itemTwo;
+  const combolist = [];
 
-  const find = await menu.findOne({ id: itemOne });
-  const findTwo = await menu.findOne({ id: itemTwo });
+  discount.combo.forEach((id) => {
+    const findItem = menu.findOne({ id: id });
 
-  if (!find || !findTwo) {
-    res.status(404).json("Please enter valid item ids for the discount!");
-  } else if (findDiscount) {
-    res.status(400).json("This combo already exists, please update instead");
-  } else if (!discount.code || !discount.discount || discount.discount <= 0) {
-    res.status(400).json("Please enter all fields for the new discount!");
+    if (!findItem) {
+      res.status(404).json("Item not found, please enter a valid item id!");
+      return;
+    } else {
+      combolist.push(findItem);
+    }
+  });
+
+  if (!discount.code || !discount.combo || discount.combo.length < 2) {
+    res.status(400).json("Please enter a valid discount code and combo!");
   } else {
     const newDiscount = {
-      code: find.title + findTwo.title,
+      combo: combolist,
       discount: discount.discount,
+      code: discount.code,
       created_at: new Date().toDateString(),
     };
-
-    await discounts.insertOne(newDiscount);
-    res.status(200).json("Discount added!");
+    const pushDiscount = await discounts.insertOne(newDiscount);
   }
 };
 

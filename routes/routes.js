@@ -1,9 +1,8 @@
 const app = require("express");
 const router = app.Router();
-const authenticateUser = require("../middleware/auth");
+const authenticateUser = require("../middleware/authenticateUser");
 const adminCheck = require("../middleware/adminprotector");
 const handleOrder = require("../middleware/orderHandler");
-const guestmw = require("../middleware/guestmiddleware");
 const controllers = require("../controllers/controllers");
 const blockGuest = require("../middleware/guestmiddleware");
 
@@ -27,6 +26,13 @@ router.post(
   authenticateUser,
   adminCheck,
   controllers.deleteMenuItem
+);
+
+router.post(
+  "/creatediscount",
+  authenticateUser,
+  adminCheck,
+  controllers.createDiscount
 );
 // User functions
 
