@@ -127,34 +127,45 @@ exports.deleteMenuItem = async (req, res) => {
 };
 
 exports.createDiscount = async (req, res) => {
-  const discount = req.body.discount;
-  const database = client.db("Airbean");
-  const discounts = database.collection("Discounts");
-  const menu = database.collection("Menu");
+  try {
+    const discount = req.body.discount;
+    const database = client.db("Airbean");
+    const discounts = database.collection("Discounts");
+    const menu = database.collection("Menu");
 
-  const combolist = [];
+    const combolist = [];
 
-  discount.combo.forEach((id) => {
-    const findItem = menu.findOne({ id: id });
+    for (const id of discount.combo) {
+      const findItem = await menu.findOne({ id: id });
 
-    if (!findItem) {
-      res.status(404).json("Item not found, please enter a valid item id!");
-      return;
-    } else {
-      combolist.push(findItem);
+      if (!findItem) {
+        return res
+          .status(404)
+          .json("Item not found, please enter a valid item id!");
+      } else {
+        combolist.push(findItem);
+      }
     }
-  });
 
-  if (!discount.code || !discount.combo || discount.combo.length < 2) {
-    res.status(400).json("Please enter a valid discount code and combo!");
-  } else {
-    const newDiscount = {
-      combo: combolist,
-      discount: discount.discount,
-      code: discount.code,
-      created_at: new Date().toDateString(),
-    };
-    const pushDiscount = await discounts.insertOne(newDiscount);
+    if (!discount.code || !discount.combo || discount.combo.length < 2) {
+      return res
+        .status(400)
+        .json("Please enter a valid discount code and combo!");
+    } else {
+      const newDiscount = {
+        combo: combolist,
+        discount: discount.discount,
+        code: discount.code,
+        created_at: new Date().toDateString(),
+      };
+      await discounts.insertOne(newDiscount);
+      return res.status(201).json("Discount created successfully!");
+    }
+  } catch (error) {
+    console.error(error);
+    return res
+      .status(500)
+      .json("An error occurred while creating the discount.");
   }
 };
 
